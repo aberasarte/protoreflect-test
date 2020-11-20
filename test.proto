@@ -1,0 +1,50 @@
+syntax = "proto2";
+
+package foo.bar;
+
+option go_package = "github.com/aberasarte/protoreflect-test/";
+
+import "google/protobuf/descriptor.proto";
+
+message Validator {
+	optional bool authenticated = 1;
+
+	enum Action {
+		LOGIN = 0;
+		READ = 1;
+		WRITE = 2;
+	}
+	message Permission {
+		optional Action action = 1;
+		optional string entity = 2;
+	}
+
+	repeated Permission permission = 2;
+}
+
+extend google.protobuf.MethodOptions {
+	optional Validator validator = 12345;
+}
+
+message Test {}
+
+service TestTestService {
+	rpc UserAuth(Test) returns (Test) {
+		option (validator) = {
+			authenticated: true
+			permission: {
+				action: LOGIN
+				entity: "client"
+			}
+		};
+	}
+	rpc Get(Test) returns (Test) {
+		option (validator) = {
+			authenticated: true
+			permission: {
+				action: READ
+				entity: "user"
+			}
+		};
+	}
+}
